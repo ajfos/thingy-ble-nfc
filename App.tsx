@@ -51,14 +51,47 @@ export default function App() {
           console.log('device connected: ', discoveredDevice.name)
           discoveredDevice.services().then((services: Service[]) => {
             console.log(services.map((service) => service.uuid))
-            discoveredDevice.readCharacteristicForService("EF680100-9B35-4933-9B10-52FFA9740042", "EF680101-9B35-4933-9B10-52FFA9740042")
+            discoveredDevice.readCharacteristicForService("EF680300-9B35-4933-9B10-52FFA9740042", "EF680301-9B35-4933-9B10-52FFA9740042")
               .then((characteristic: Characteristic) => {
                 if(characteristic && characteristic.value) {
-                  console.log('got characteristic: ', Buffer.from(characteristic.value).toString("utf8"))
+                  const buffer = Buffer.from(characteristic.value, "base64");
+                  console.log('LED characteristic as base64: ', buffer)
+                  console.log('mode: ', buffer.readUInt8(0))
+                  console.log('colour: ', buffer.readUInt8(1))
+                  console.log('intensity: ', buffer.readUInt8(2))
+                  console.log('delay: ', buffer.readUInt16LE(3))
                 }
                 
+              }).catch((e) => {
+                console.log('read LED Error: ', e)
               })
           });
+
+          
+          discoveredDevice.monitorCharacteristicForService("EF680300-9B35-4933-9B10-52FFA9740042", "EF680302-9B35-4933-9B10-52FFA9740042", (err, characteristic: Characteristic | null) => {
+            if(err) {
+              console.log('error! ', err);
+              return;
+            }
+
+            if(characteristic && characteristic.value) {
+              console.log('button pressed characteristic', Buffer.from(characteristic.value, "base64"))
+            }
+            
+          })
+
+          // discoveredDevice.monitorCharacteristicForService("EF680400-9B35-4933-9B10-52FFA9740042", "EF680408-9B35-4933-9B10-52FFA9740042", (err, characteristic: Characteristic | null) => {
+          //   if(err) {
+          //     console.log('error! ', err);
+          //     return;
+          //   }
+
+          //   if(characteristic && characteristic.value) {
+          //     console.log('rotation characteristic', Buffer.from(characteristic.value).readInt16LE())
+          //   }
+            
+          // })
+          
           
         })
         .catch((error: any) => {
